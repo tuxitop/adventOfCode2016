@@ -50,7 +50,7 @@ var testInput2 = "R2, R2, R2";
 var testInput3 = "R5, L5, R5, R3";
 var testInput4 = "R8, R4, R4, R8"; // test input for part 2
 
-// define modulu for js.
+// define modulo for js.
 function mod(n, m) {
     return ((n % m) + m) % m;
 }
