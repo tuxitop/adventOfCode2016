@@ -40,12 +40,6 @@ const fs = require('fs');
 
 function validTriangles(inputFile) {
     var input = fs.readFileSync(inputFile, "utf-8"); 
-    var testInput = "  785  516  744\n" +
-                    "  272  511  358\n" +
-                    "  801  791  693\n" +
-                    "  572  150   74\n" +
-                    "  644  534  138\n" +
-                    "  191  396  196\n";
     var validTris = 0; // counter for horizontal triangle sides.
     var vertValidTris = 0; // counter for vertival triangle sides.
 
