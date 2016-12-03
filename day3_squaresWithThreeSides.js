@@ -38,8 +38,8 @@
 /* jshint esversion: 6 */
 const fs = require('fs');
 
+// function to test validity of a triangle.
 const isPossible = ([a, b, c]) => (a + b > c) && (a + c > b) && (b + c > a);
-
 
 function validTriangles(inputFile) {
     var input = fs.readFileSync(inputFile, "utf-8"); 
@@ -48,7 +48,7 @@ function validTriangles(inputFile) {
     // split the lines (\.+\) -> split the numbers -> make strings to numbers
     // I used match(/.+/) to split the lines in order to ignore empty lines.
     var trisArray = input.match(/.+/g).map((line) => {
-        return line.match(/\d+/g).map((val => Number(val)));
+        return line.match(/\d+/g).map((val => +val));
     });
     
     // Parse the trisArray vertically
@@ -68,8 +68,7 @@ function validTriangles(inputFile) {
     // test the possibility of each vertical triangles.
     var vertValidTris = vertTrisArray.filter(isPossible).length;
     
-
-    console.log("Horizantaly there are " + validTris + " possible triangles.");
+    console.log("Horizontally there are " + validTris + " possible triangles.");
     console.log("Vertically there are " + vertValidTris + " possible triangles.");
 }
 
