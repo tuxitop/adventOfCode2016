@@ -38,10 +38,11 @@
 /* jshint esversion: 6 */
 const fs = require('fs');
 
+const isPossible = ([a, b, c]) => (a + b > c) && (a + c > b) && (b + c > a);
+
+
 function validTriangles(inputFile) {
     var input = fs.readFileSync(inputFile, "utf-8"); 
-    var validTris = 0; // counter for horizontal triangle sides.
-    var vertValidTris = 0; // counter for vertival triangle sides.
 
     // Parse the input to an array of arrays with side lengthes of each trianlge
     // split the lines (\.+\) -> split the numbers -> make strings to numbers
@@ -52,39 +53,21 @@ function validTriangles(inputFile) {
     
     // Parse the trisArray vertically
     var vertTrisArray = [];
-    var counter = 0;
-    var tempArray = [];
-    for (var col = 0; col < 3; col++) {
-        for (var row = 0; row < trisArray.length; row++) {
-            counter++;
-            tempArray.push(trisArray[row][col]);
-            if (counter === 3) {
-                vertTrisArray.push(tempArray);
-                tempArray = [];
-                counter = 0;
-            }
+    for (let col = 0; col < 3; col++) {
+        for (let row = 0; row < trisArray.length; row+=3) {
+            let triangle = [trisArray[row][col],
+                            trisArray[row + 1][col],
+                            trisArray[row + 2][col]];
+            vertTrisArray.push(triangle);
         }
     }
 
-    // test the possiblility of each triangle.
-    trisArray.forEach((triangle) => {
-        var a = triangle[0];
-        var b = triangle[1];
-        var c = triangle[2];
-        if ( (a + b > c) && (a + c > b) && (b + c > a) ) {
-            validTris++;
-        }
-    });
+    // test the possiblility of each horizontal triangle.
+    var validTris = trisArray.filter(isPossible).length;
 
     // test the possibility of each vertical triangles.
-    vertTrisArray.forEach((triangle) => {
-        var a = triangle[0];
-        var b = triangle[1];
-        var c = triangle[2];
-        if ( (a + b > c) && (a + c > b) && (b + c > a) ) {
-            vertValidTris++;
-        }
-    });
+    var vertValidTris = vertTrisArray.filter(isPossible).length;
+    
 
     console.log("Horizantaly there are " + validTris + " possible triangles.");
     console.log("Vertically there are " + vertValidTris + " possible triangles.");
