@@ -69,35 +69,50 @@ const crypto = require('crypto');
 var input = "ffykfhsq";
 var testInput = "abc";
 
-function genPassP1(input) {
-    var pass = "";
+function genPass(input) {
+    var passP1 = [null, null, null, null, null, null, null, null];
+    var passP2 = [null, null, null, null, null, null, null, null];
     var idx = 0;
-    while (pass.length < 8) {
-        var hash = crypto.createHash("md5").update(input + idx).digest('hex');
+    var foundCharsP1 = 0;
+    var foundCharsP2 = 0;
+    while (foundCharsP1 < 8 || foundCharsP2 < 8) {
+        let hash = crypto.createHash("md5").update(input + idx).digest('hex');
         if (hash.substring(0, 5) === "00000"){
-            pass += hash[5];
-            console.log("Found " + hash + " on index " + idx);
+            if (foundCharsP1 < 8) { 
+                passP1[foundCharsP1] = hash[5];
+                foundCharsP1++;
+            }
+            if (+hash[5] < 8 && passP2[hash[5]] === null) {
+                passP2[hash[5]] = hash[6];
+                foundCharsP2++;
+            }
         }
         idx++;
-    }
-    console.log("The password is: " + pass);
-}
 
-function genPassP2(input) {
-    var pass = [null, null, null, null, null, null, null, null];
-    var idx = 0;
-    var foundChars = 0;
-    while (foundChars < 8) {
-        var hash = crypto.createHash("md5").update(input + idx).digest('hex');
-        if (hash.substring(0, 5) === "00000" && +hash[5] < 8 && !pass[hash[5]]){
-            pass[hash[5]] = hash[6];
-            foundChars++;
-            console.log("Found " + hash + " on index " + idx);
+        // Animation Part:
+        if (idx % 5000 === 0) {
+            let dummyPassP1 = passP1.slice();
+            let dummyPassP2 = passP2.slice();
+            for (let idx = 0; idx < 8; idx++) {
+                if (dummyPassP1[idx] === null  || dummyPassP2[idx] === null) {
+                    let randNum = Math.floor(Math.random() * 10);
+                    if (dummyPassP1[idx] === null && dummyPassP2[idx] === null) {
+                        dummyPassP1[idx] = randNum;
+                        dummyPassP2[idx] = randNum;
+                    } else if (dummyPassP1[idx] === null) {
+                        dummyPassP1[idx] = randNum;
+                    } else {
+                        dummyPassP2[idx] = randNum;
+                    }
+                }
+            }
+            process.stdout.write(dummyPassP1.join("") + " - " + dummyPassP2.join("") + '\r');
         }
-        idx++;
     }
-    console.log("The password for part two is: " + pass.join(""));
+    
+    console.log(process.stdout.write(dummyPassP1.join("") + " - " + dummyPassP2.join("")));
+    console.log("The password for the first door is: " + passP1.join(""));
+    console.log("The password for the second door is: " + passP2.join(""));
 }
 
 genPass(input);
-genPassP2(input);
