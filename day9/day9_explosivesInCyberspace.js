@@ -40,38 +40,76 @@
  *
  * What is the decompressed length of the file (your puzzle input)? Don't count
  * whitespace.
+ *
+ * --- Part Two ---       
+ *
+ * Apparently, the file actually uses version two of the format.
+ *
+ * In version two, the only difference is that markers within decompressed data
+ * are decompressed. This, the documentation explains, provides much more
+ * substantial compression capabilities, allowing many-gigabyte files to be
+ * stored in only a few kilobytes.
+ *
+ * For example:
+ *
+ *     (3x3)XYZ still becomes XYZXYZXYZ, as the decompressed section contains no markers.
+ *
+ *     X(8x2)(3x3)ABCY becomes XABCABCABCABCABCABCY, because the decompressed
+ *     data from the (8x2) marker is then further decompressed, thus triggering
+ *     the (3x3) marker twice for a total of six ABC sequences.
+ *
+ *     (27x12)(20x12)(13x14)(7x10)(1x12)A decompresses into a string of A
+ *     repeated 241920 times.
+ *
+ *     (25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN becomes 445
+ *     characters long.
+ *
+ * Unfortunately, the computer you brought probably doesn't have enough memory
+ * to actually decompress the file; you'll have to come up with another way to
+ * get its decompressed length.
+ *
+ * What is the decompressed length of the file using this improved format?
 */
 /* jshint esversion: 6 */
 
 const fs = require('fs');
+const input = fs.readFileSync("./day9_explosivesInCyberspace_input.txt", "utf-8");
 
-function decompress(data, err) {
-    if (err) {
-        throw err;
-    }
-    data = data.trim();
-    let re = /\((\d+)x(\d+)\)/;
-    let decompData = "";
-    while (data.length) {
-        let marker = re.exec(data);
-        if (marker) {
-            decompData += data.slice(0, marker.index);
-            let markerCharCount = +marker[1];
-            let markerRptCount = +marker[2];
-            let lastIndex = marker.index + marker[0].length;
-            decompData += data.slice(lastIndex, lastIndex + markerCharCount).repeat(markerRptCount);
-            data = data.slice(lastIndex + markerCharCount);
+// version is only required if using version 1
+function findDecompLength(input, version) {
+    let data = input.trim(); // trim to remove any newlines before/after
+    let re = /\((\d+)x(\d+)\)/; // regexp to find marker.
+    let decompLength = 0;
+    let decompLengthP2 = 0;
+    let marker;
+    while ((marker = re.exec(data)) !== null) {
+        // add anything before the marker to the length.
+        decompLength += marker.index;
+        decompLengthP2 += marker.index;
+        
+        let markerChCount = +marker[1]; // number of chars to repeat.
+        let markerRepeat = +marker[2];  // number of repetitions.
+        
+        // add the length of zone after decompression for part one.
+        decompLength += markerChCount * markerRepeat;
 
-        } else {
-            decompData += data;
-            data = "";
-        }   
+        // the index where the zone of the market begins.
+        let endOfMarker = marker.index + marker[0].length;
+        let dataInZone = data.slice(endOfMarker, endOfMarker + markerChCount);
+        // recursively find the length of the zone and add to the final result.
+        decompLengthP2 += findDecompLength(dataInZone) * markerRepeat;
+        
+        // cut the processed part from the data.
+        data = data.slice(endOfMarker + markerChCount);
     }
-    // console.log(decompData);
-    console.log(decompData.length);
+    // add anything left at the end to the length.
+    decompLength += data.length;
+    decompLengthP2 += data.length;
+    if (version === 1) {
+        return decompLength;
+    }
+    return decompLengthP2;
 }
 
-let input = fs.readFileSync("./day9_explosivesInCyberspace_input.txt", "utf-8");
-// let testInput = "ADVENTA(1x5)BC(3x3)XYZA(2x2)BCD(2x2)EFG(6x1)(1x3)AX(8x2)(3x3)ABCY";
-// decompress(testInput);
-decompress(input);
+console.log("The decompressed length of the file using version 1 is: " + findDecompLength(input, 1));
+console.log("The decompressed length of the file using version 2 is: " + findDecompLength(input));
