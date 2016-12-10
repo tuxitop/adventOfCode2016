@@ -44,10 +44,12 @@
  * Based on your instructions, what is the number of the bot that is
  * responsible for comparing value-61 microchips with value-17 microchips?
  *
+ * --- Part Two ---
+ *
  * What do you get if you multiply together the values of one chip in each of
  * outputs 0, 1, and 2?
 */
-/* jshint: esversion: 6 */
+/* jshint esversion: 6 */
 const fs = require('fs');
 
 const input = fs.readFileSync("./day10_balanceBots_input.txt", "utf-8");
@@ -66,7 +68,7 @@ function Bot() {
     this.addValue = function(value) {
         this.values.push(value);
         this.check();
-    }
+    };
 
     this.check = function() {
         if (this.low && this.high && this.values.length === 2) {
@@ -74,7 +76,7 @@ function Bot() {
             this.low.addValue(this.values[0]);
             this.high.addValue(this.values[1]);
         }
-    }
+    };
 }
 
 function Output() {
@@ -82,59 +84,75 @@ function Output() {
 
     this.addValue = function(value) {
         this.values.push(value);
-    }
+    };
+}
+
+function Field() {
+    this.bots = new Map();
+    this.outputs = new Map();
+
+    // register a bot in the bots Map
+    this.regBot = function(botID) {
+        if (!this.bots.has(botID)) {
+            this.bots.set(botID, new Bot());
+        }
+    };
+
+    // register an output in the outputs Map
+    this.regOutput = function(outputID) {
+        if (!this.outputs.has(outputID)) {
+            this.outputs.set(outputID, new Output());
+        }
+    };
+
+    this.runCommand = function(cmd) {
+        let words = cmd.split(" ");
+        if (words[0] === 'value') {
+            this.regBot(+words[5]);
+            this.bots.get(+words[5]).addValue(+words[1]);
+        } else {
+            this.regBot(+words[1]);
+            // assign low value delivery point.
+            if (words[5] === "bot") {
+                this.regBot(+words[6]);
+                this.bots.get(+words[1]).low = this.bots.get(+words[6]);
+            } else if (words[5] === "output") {
+                this.regOutput(+words[6]);
+                this.bots.get(+words[1]).low = this.outputs.get(+words[6]);
+            }
+            // assign high value delivery point.
+            if (words[10] === "bot") {
+                this.regBot(+words[11]);
+                this.bots.get(+words[1]).high = this.bots.get(+words[11]);
+            } else if (words[10] === "output") {
+                this.regOutput(+words[11]);
+                this.bots.get(+words[1]).high = this.outputs.get(+words[11]);
+            }
+            this.bots.get(+words[1]).check();
+        }
+    };
 }
 
 function runCommands(input) {
-    let bots = new Map();
-    let outputs = new Map();
+    let field = new Field();
     let commands = input.trim().split("\n");
-    commands.forEach((command) => {
-        let words = command.split(" ");
-        if (words[0] === 'value') {
-            if (!bots.has(+words[5])) {
-                bots.set(+words[5], new Bot());
-            }
-            bots.get(+words[5]).addValue(+words[1]);
-        } else { // if word[0] === bot;
-            if (!bots.has(+words[1])) {
-                bots.set(+words[1], new Bot());
-            }
-            if (words[5] === "bot") {
-                if (!bots.has(+words[6])) {
-                    bots.set(+words[6], new Bot());
-                }
-                bots.get(+words[1]).low = bots.get(+words[6]);
-            } else if (words[5] === "output") {
-                if (!outputs.has(+words[6])) {
-                    outputs.set(+words[6], new Output());
-                }
-                bots.get(+words[1]).low = outputs.get(+words[6]);
-            }
-            if (words[10] === "bot") {
-                if (!bots.has(+words[11])) {
-                    bots.set(+words[11], new Bot());
-                }
-                bots.get(+words[1]).high = bots.get(+words[11]);
-            } else if (words[10] === "output") {
-                if (!outputs.has(+words[11])) {
-                    outputs.set(+words[11], new Output());
-                }
-                bots.get(+words[1]).high = outputs.get(+words[11]);
-            }
-            bots.get(+words[1]).check();
-        }
-    });
-    bots.forEach((bot, key) => {
-        let sorted = bot.values.sort((a, b) => (a - b));
-        if (sorted[0] === 17 && sorted[1] === 61) {
-            console.log(key);
-        }
+    commands.forEach((cmd) => {
+        field.runCommand(cmd);
     });
 
-    console.log(outputs.get(0).values[0] *
-                outputs.get(1).values[0] * 
-                outputs.get(2).values[0]);
+    // get the answer for part one;
+    field.bots.forEach((bot, key) => {
+        let sorted = bot.values.sort((a, b) => (a - b));
+        if (sorted[0] === 17 && sorted[1] === 61) {
+            console.log("bot " + key + " is responsible for comparing 61 and 17");
+        }
+    });
+    
+    // get the answer for part two
+    let multiply = (field.outputs.get(0).values[0] *
+                    field.outputs.get(1).values[0] * 
+                    field.outputs.get(2).values[0]);
+    console.log("The multiplied amount of the chips is outputs 0, 1 and 2 is: " + multiply);
 }
 
 runCommands(input);
